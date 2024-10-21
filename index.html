@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Management</title>
+</head>
+
+<body>
+    <form id="userForm" onsubmit="saveDetails(event)">
+        <label for="name">Name</label>
+        <input type="text" name="name" id="name" required>
+        <label for="email">Email</label>
+        <input type="email" name="email" id="email" required>
+        <label for="number">Number</label>
+        <input type="number" name="number" id="number" required>
+
+        <!-- When you click the Edit button for a user, the hidden field is populated with the index (position) of the user in the array. This allows the form to know which user's details to update. -->
+        <input type="hidden" id="index" value="">
+        <button type="submit">Submit</button>
+    </form>
+    <ul id="hello"></ul>
+
+    <script>
+
+        function saveDetails(event) {
+            event.preventDefault();
+            let name = document.getElementById('name').value;
+            let email = document.getElementById('email').value;
+            let number = document.getElementById('number').value;
+            let index = document.getElementById('index').value;
+
+            //  localStorage can only store strings, you need to convert objects to a JSON string using JSON.stringify() when saving and use JSON.parse() to retrieve the object.
+            let userDetails = JSON.parse(localStorage.getItem('userDetails')) || [];  //either userDetails holds object in array or blank array [{...},{..}] || []
+
+            let obj = { name, email, number };
+
+            if (index === '') {
+                userDetails.push(obj);
+            } else {
+                // If index is not empty, the code is in edit mode. It updates the user at the specific index in the userDetails array:
+                //parseInt(index) converts the index from a string (e.g., "0", "1") to an integer (e.g., 0, 1). This is important because arrays in JavaScript use integer-based indices.
+                userDetails[parseInt(index)] = obj;
+                document.getElementById('index').value = ''; // Reset index for future new entries
+            }
+
+            localStorage.setItem('userDetails', JSON.stringify(userDetails));
+            document.getElementById('userForm').reset();
+            displayDetails();
+        }
+
+        function displayDetails() {
+            let userDetails = JSON.parse(localStorage.getItem('userDetails')) || [];
+            let show = document.getElementById('hello');
+            show.innerHTML = '';
+
+            userDetails.forEach((obj, idx) => {  //(value,key)
+                show.innerHTML +=
+                    `<li>${obj.name} - ${obj.email} - ${obj.number}
+                        <button onclick="editDetails(${idx})">Edit</button>
+                        <button onclick="deleteDetails(${idx})">Delete</button> </li>`;
+            });
+        }
+
+        function deleteDetails(index) {
+            let userDetails = JSON.parse(localStorage.getItem('userDetails')) || [];
+
+            // array.splice(start, deleteCount, item1, item2, ...)
+            // start: The index at which to start changing the array. In your case, this is index, the position of the user you want to delete.
+            // deleteCount: The number of elements to remove. Here, it's 1, meaning you want to remove exactly one element at the specified index.
+            userDetails.splice(index, 1);
+            localStorage.setItem('userDetails', JSON.stringify(userDetails));
+            displayDetails();
+        }
+
+        function editDetails(index) {
+            let userDetails = JSON.parse(localStorage.getItem('userDetails')) || [];
+            let user = userDetails[index];
+            document.getElementById('name').value = user.name;
+            document.getElementById('email').value = user.email;
+            document.getElementById('number').value = user.number;
+            document.getElementById('index').value = index;
+        }
+
+        function loading() {
+            displayDetails();
+        }
+
+        window.onload = loading;
+    </script>
+</body>
+
+</html>
